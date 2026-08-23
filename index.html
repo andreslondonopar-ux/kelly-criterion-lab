@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kelly Criterion / Position Sizing Lab — cuánto apostar, paso a paso</title>
+<meta name="description" content="Un laboratorio educativo interactivo que construye el Kelly Criterion desde una apuesta binaria clásica hasta un activo real con datos en vivo, con simulación de curvas de equity." />
+
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://kelly-criterion-lab.vercel.app/" />
+<meta property="og:title" content="Kelly Criterion / Position Sizing Lab — cuánto apostar, paso a paso" />
+<meta property="og:description" content="Un laboratorio educativo interactivo que construye el Kelly Criterion desde una apuesta binaria clásica hasta un activo real con datos en vivo, con simulación de curvas de equity." />
+<meta property="og:image" content="https://kelly-criterion-lab.vercel.app/assets/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="es" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Kelly Criterion / Position Sizing Lab — cuánto apostar, paso a paso" />
+<meta name="twitter:description" content="Un laboratorio educativo interactivo que construye el Kelly Criterion desde una apuesta binaria clásica hasta un activo real con datos en vivo, con simulación de curvas de equity." />
+<meta name="twitter:image" content="https://kelly-criterion-lab.vercel.app/assets/og-image.png" />
+
+<link rel="stylesheet" href="assets/css/site.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+</head>
+<body>
+
+<div class="topnav">
+  <div class="wrap">
+    <div class="brand">Kelly<span>Lab</span></div>
+    <nav>
+      <a href="#intro" data-i18n="nav.intro">Intro</a>
+      <a href="#paso1" data-i18n="nav.paso1">1. Apuesta binaria</a>
+      <a href="#paso2" data-i18n="nav.paso2">2. Curva de crecimiento</a>
+      <a href="#paso3" data-i18n="nav.paso3">3. Activo real</a>
+      <a href="#paso4" data-i18n="nav.paso4">4. Kelly fraccional</a>
+      <a href="#paso5" data-i18n="nav.paso5">5. Simulación</a>
+      <a href="#limitaciones" data-i18n="nav.limites">Límites</a>
+      <a href="#creador" data-i18n="nav.creador">Creador</a>
+    </nav>
+    <button type="button" id="lang-toggle" class="lang-toggle" aria-label="Switch language / Cambiar idioma">EN</button>
+  </div>
+</div>
+
+<header class="hero" id="intro">
+  <div class="wrap">
+    <p class="eyebrow" data-i18n="hero.eyebrow">Proyecto educativo · Kelly Criterion</p>
+    <h1 data-i18n="hero.h1">Kelly Criterion: cuánto apostar, paso a paso</h1>
+    <p class="lead" data-i18n="hero.lead">
+      John Kelly resolvió en 1956 una pregunta que todo el mundo con una ventaja (una
+      apuesta, una inversión) enfrenta tarde o temprano: no cuánto se puede ganar, sino
+      qué fracción del capital apostar para crecer lo más rápido posible sin arriesgarse
+      a la ruina. Este sitio construye la fórmula desde una apuesta binaria clásica hasta
+      un activo real con datos en vivo, mostrando por qué apostar de más es tan malo
+      como apostar de menos.
+    </p>
+
+    <div class="control-bar">
+      <div class="field small">
+        <label for="ticker-input" data-i18n="controls.tickerLabel">Activo real (para el Paso 3)</label>
+        <input id="ticker-input" type="text" value="AAPL" />
+      </div>
+      <div class="field small">
+        <label for="riskfree-input" data-i18n="controls.riskfreeLabel">Tasa libre de riesgo (%)</label>
+        <input id="riskfree-input" type="number" step="0.1" value="4" />
+      </div>
+      <div class="field small">
+        <label for="years-input" data-i18n="controls.yearsLabel">Años de histórico</label>
+        <input id="years-input" type="number" step="1" min="1" max="20" value="5" />
+      </div>
+      <button class="primary" id="recalc-btn" data-i18n="controls.recalcBtn">Recalcular</button>
+    </div>
+    <div class="status-line" id="status-line" data-i18n="controls.loadingDefault">Cargando ejemplo por defecto…</div>
+    <p style="font-size:13px; color:var(--text-faint); margin-top:10px; max-width:700px;" data-i18n="controls.hint">
+      Todos los campos de esta página alimentan el mismo cálculo — cambia cualquiera y presiona "Recalcular" arriba.
+    </p>
+  </div>
+</header>
+
+<section class="step" id="paso1">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="paso1.badge">PASO 1</span><h2 data-i18n="paso1.title">El caso clásico: una apuesta binaria</h2></div>
+    <p data-i18n="paso1.p">
+      Una apuesta donde ganas con probabilidad <code>p</code> y, si ganas, recibes
+      <code>b</code> unidades por cada unidad apostada (si pierdes, pierdes lo apostado).
+      Kelly responde: de tu capital, ¿qué fracción <code>f</code> apostar en cada ronda?
+    </p>
+    <div class="control-bar" style="margin-top:0">
+      <div class="field small">
+        <label for="winprob-input" data-i18n="paso1.winProbLabel">Probabilidad de ganar (p)</label>
+        <input id="winprob-input" type="number" step="1" min="1" max="99" value="55" />
+      </div>
+      <div class="field small">
+        <label for="netodds-input" data-i18n="paso1.netOddsLabel">Cuota neta (b)</label>
+        <input id="netodds-input" type="number" step="0.1" min="0.1" value="1" />
+      </div>
+    </div>
+    <div class="formula-block" data-i18n="paso1.formula">$$ f^* = p - \frac{q}{b} = p - \frac{1-p}{b} $$</div>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="label" data-i18n="paso1.resultLabel">Fracción óptima de Kelly (f*)</div><div class="value" id="fstar-binary">—</div></div>
+    </div>
+    <div class="callout danger" id="binary-warning" style="display:none" data-i18n="paso1.noEdge">
+      Con estos números no hay ventaja (f* ≤ 0) — Kelly dice: no apuestes.
+    </div>
+  </div>
+</section>
+
+<section class="step" id="paso2">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="paso2.badge">PASO 2</span><h2 data-i18n="paso2.title">La curva de crecimiento</h2></div>
+    <p data-i18n="paso2.p">
+      Para cada fracción <code>f</code> hay una tasa de crecimiento esperada del capital
+      (en log, porque las apuestas se componen). La curva tiene un máximo — y ese máximo
+      es exactamente <code>f*</code>. Apostar más allá de él no es "más agresivo pero más
+      rentable": es simplemente peor, incluso antes de llegar al punto donde arruina.
+    </p>
+    <div class="card"><div class="plot" id="binary-growth-chart"></div></div>
+  </div>
+</section>
+
+<section class="step" id="paso3">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="paso3.badge">PASO 3</span><h2 data-i18n="paso3.title">Generalizar a un activo real</h2></div>
+    <p data-i18n="paso3.p">
+      La misma idea aplica a invertir en un activo: en vez de una apuesta binaria
+      discreta, el activo tiene un retorno esperado <code>μ</code> y una volatilidad
+      <code>σ</code> (calculados en vivo de su histórico real). La versión continua de
+      Kelly da una fórmula igual de simple:
+    </p>
+    <div class="formula-block" data-i18n="paso3.formula">$$ f^* = \frac{\mu - r}{\sigma^2} $$</div>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="label" data-i18n="paso3.muLabel">Retorno esperado anual (μ)</div><div class="value" id="mu-value">—</div></div>
+      <div class="stat-tile"><div class="label" data-i18n="paso3.sigmaLabel">Volatilidad anual (σ)</div><div class="value" id="sigma-value">—</div></div>
+      <div class="stat-tile"><div class="label" data-i18n="paso3.fStarLabel">Fracción de Kelly (f*)</div><div class="value up" id="fstar-continuous">—</div></div>
+    </div>
+    <div class="callout" id="leverage-note" style="display:none" data-i18n="paso3.leverageNote">
+      f* > 100% significa que Kelly recomienda apalancarse — pedir prestado para invertir más del capital propio en el activo. No es un error: así de fuerte puede ser una ventaja real.
+    </div>
+    <div class="card" style="margin-top:16px"><div class="plot" id="continuous-growth-chart"></div></div>
+  </div>
+</section>
+
+<section class="step" id="paso4">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="paso4.badge">PASO 4</span><h2 data-i18n="paso4.title">Kelly fraccional: por qué no apostar Kelly completo</h2></div>
+    <p data-i18n="paso4.p">
+      Kelly completo maximiza el crecimiento mediano a largo plazo — pero también
+      maximiza la volatilidad del camino hasta llegar ahí. En la práctica casi nadie
+      apuesta Kelly completo: μ y σ nunca se conocen con certeza, y una sobreestimación
+      de μ o subestimación de σ hace que el "Kelly completo" real termine siendo una
+      sobre-apuesta. Medio Kelly es el punto de partida típico entre traders reales.
+    </p>
+    <div class="card"><div class="plot tall" id="equity-curves-chart"></div></div>
+  </div>
+</section>
+
+<section class="step" id="paso5">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="paso5.badge">PASO 5</span><h2 data-i18n="paso5.title">Simulación: la distribución completa de resultados</h2></div>
+    <p data-i18n="paso5.p">
+      Una sola curva de equity es una muestra de un proceso aleatorio — para ver el
+      panorama completo hace falta simular muchas trayectorias con la misma fracción y
+      mirar la distribución de resultados finales, no solo una.
+    </p>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="label" data-i18n="paso5.medianLabel">Mediana</div><div class="value up" id="median-stat">—</div></div>
+    </div>
+    <div class="card"><div class="plot" id="terminal-histogram"></div></div>
+  </div>
+</section>
+
+<section class="step" id="limitaciones">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="limits.badge">LÍMITES</span><h2 data-i18n="limits.title">Limitaciones y para seguir leyendo</h2></div>
+    <div class="callout danger" data-i18n="limits.callout">
+      Este sitio es material educativo, no asesoría financiera. Kelly asume que μ y σ se
+      conocen exactamente — en la práctica se estiman con error, y ese error casi
+      siempre hace que el Kelly "verdadero" sea menor al calculado.
+    </div>
+    <p style="margin-top:20px" data-i18n="limits.reading">
+      Para profundizar: John L. Kelly Jr., <em>"A New Interpretation of Information
+      Rate"</em>, Bell System Technical Journal (1956).
+    </p>
+  </div>
+</section>
+
+<section class="step" id="creador" style="border-bottom:none">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="creator.badge">CREADOR</span><h2 data-i18n="creator.title">Sobre el creador</h2></div>
+    <div class="creator-card">
+      <p data-i18n="creator.text" style="margin:0">Hecho por Andrés Londoño.</p>
+      <div class="creator-links">
+        <a href="https://github.com/andreslondonopar-ux" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://www.linkedin.com/in/andrés-londoño-paredes/" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="https://markowitz-portfolio-lab.vercel.app" target="_blank" rel="noopener">Markowitz Lab ↗</a>
+        <a href="https://capm-beta-lab.vercel.app" target="_blank" rel="noopener">CAPM Lab ↗</a>
+        <a href="https://black-scholes-lab.vercel.app" target="_blank" rel="noopener">Black-Scholes Lab ↗</a>
+        <a href="https://var-risk-lab.vercel.app" target="_blank" rel="noopener">VaR Dashboard ↗</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" data-i18n="footer.text">
+    Kelly Criterion / Position Sizing Lab — proyecto educativo independiente, quinto de una serie de sitios sobre finanzas cuantitativas. Datos: Yahoo Finance. Cómputo: 100% en el navegador (JavaScript).
+  </div>
+</footer>
+
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="assets/js/kelly.js"></script>
+<script src="assets/js/plots.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
