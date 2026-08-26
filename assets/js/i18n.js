@@ -101,6 +101,16 @@ const I18N = (() => {
       es: "f* > 100% significa que Kelly recomienda apalancarse — pedir prestado para invertir más del capital propio en el activo. No es un error: así de fuerte puede ser una ventaja real.",
       en: "f* > 100% means Kelly recommends leveraging — borrowing to invest more than your own capital in the asset. It's not a mistake: that's how strong a real edge can be.",
     },
+    "paso3.seExplainer": {
+      es: `El número pequeño bajo μ es su error estándar — con pocos años de historia
+        diaria, el margen de error de estimar el retorno esperado suele ser <em>mayor</em>
+        que el propio μ. Esa incertidumbre es la raíz cuantitativa de todo el Paso 4.`,
+      en: `The small number under μ is its standard error — with only a few years of
+        daily history, the margin of error in estimating expected return is often
+        <em>larger</em> than μ itself. That uncertainty is the quantitative root of all of
+        Step 4.`,
+    },
+    "paso3.muSeNote": { es: "± {se} error estándar", en: "± {se} standard error" },
 
     "paso4.badge": { es: "PASO 4", en: "STEP 4" },
     "paso4.title": { es: "Kelly fraccional: por qué no apostar Kelly completo", en: "Fractional Kelly: why not bet full Kelly" },
@@ -116,6 +126,27 @@ const I18N = (() => {
         Kelly: μ and σ are never known with certainty (they're estimated with error), and
         overestimating μ or underestimating σ turns the "true full Kelly" into an
         overbet. Half Kelly is the typical starting point among real traders.`,
+    },
+    "paso4.ddFullLabel": { es: "Drawdown mediano — Kelly completo", en: "Median drawdown — full Kelly" },
+    "paso4.ddHalfLabel": { es: "Drawdown mediano — medio Kelly", en: "Median drawdown — half Kelly" },
+    "paso4.ddFullP95Label": { es: "Drawdown p95 — Kelly completo", en: "P95 drawdown — full Kelly" },
+    "paso4.sensTitle": { es: "¿Qué tan caro es un error de estimación?", en: "How costly is an estimation error?" },
+    "paso4.sensP": {
+      es: `La curva de crecimiento del Paso 3 asume que <code>μ</code> se conoce
+        exactamente. En la práctica se estima con error (ver la nota de error estándar
+        arriba). Esta grilla muestra el crecimiento <strong>real</strong> que se obtiene
+        si se apuesta la fracción calculada con un <code>μ</code> supuesto, pero el
+        <code>μ</code> verdadero resulta ser otro — verde es crecimiento real positivo,
+        rojo es negativo. La diagonal (supuesto = verdadero) es siempre el mejor caso;
+        alejarse de ella, incluso apostando "de forma óptima" para el supuesto
+        equivocado, cuesta crecimiento real.`,
+      en: `The growth curve from Step 3 assumes <code>μ</code> is known exactly. In
+        practice it's estimated with error (see the standard error note above). This grid
+        shows the <strong>real</strong> growth obtained if you bet the fraction computed
+        with an assumed <code>μ</code>, but the true <code>μ</code> turns out to be
+        different — green is positive real growth, red is negative. The diagonal (assumed
+        = true) is always the best case; straying from it, even betting "optimally" for
+        the wrong assumption, costs real growth.`,
     },
 
     "paso5.badge": { es: "PASO 5", en: "STEP 5" },
@@ -153,6 +184,23 @@ const I18N = (() => {
         constant rebalancing it assumes. And while it maximizes long-run growth, it says
         nothing about how much temporary loss (drawdown) someone is willing to tolerate
         along the way — that's a personal decision, not a mathematical one.`,
+    },
+    "limits.multiAsset": {
+      es: `Un paso más allá de lo que este sitio implementa (decisión explícita de
+        alcance, no una limitación técnica): con <strong>varios activos
+        correlacionados</strong> a la vez, el vector óptimo de Kelly es
+        <code>f* = Σ⁻¹(μ − r·1)</code> — la misma matriz de covarianza <code>Σ</code> que
+        ya calcula
+        <a href="https://markowitz-portfolio-lab.vercel.app" target="_blank" rel="noopener">Markowitz Portfolio Lab</a>,
+        aplicada a maximizar crecimiento en vez de minimizar varianza para un retorno
+        objetivo.`,
+      en: `A step beyond what this site implements (an explicit scope decision, not a
+        technical limitation): with <strong>several correlated assets</strong> at once,
+        the optimal Kelly vector is <code>f* = Σ⁻¹(μ − r·1)</code> — the same covariance
+        matrix <code>Σ</code> that
+        <a href="https://markowitz-portfolio-lab.vercel.app" target="_blank" rel="noopener">Markowitz Portfolio Lab</a>
+        already computes, applied to maximizing growth instead of minimizing variance for
+        a target return.`,
     },
     "limits.reading": {
       es: `Para profundizar: John L. Kelly Jr., <em>"A New Interpretation of Information
@@ -201,6 +249,9 @@ const I18N = (() => {
     "charts.equityAxis": { es: "Valor del portafolio (log)", en: "Portfolio value (log)" },
     "charts.terminalValueAxis": { es: "Valor final del portafolio", en: "Final portfolio value" },
     "charts.frequencyAxis": { es: "Frecuencia", en: "Frequency" },
+    "charts.assumedMuAxis": { es: "μ supuesto (usado para apostar)", en: "Assumed μ (used to bet)" },
+    "charts.trueMuAxis": { es: "μ verdadero", en: "True μ" },
+    "charts.realGrowthLabel": { es: "Crecimiento real", en: "Real growth" },
   };
 
   let locale = (localStorage.getItem(STORAGE_KEY) === "en") ? "en" : "es";

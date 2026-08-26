@@ -84,5 +84,35 @@ const Plots = (() => {
     Plotly.newPlot(el, [trace], layout, CONFIG);
   }
 
-  return { COLORS, CONFIG, baseLayout, renderGrowthCurve, renderEquityCurves, renderTerminalHistogram };
+  // Heatmap de sensibilidad: crecimiento REAL obtenido si se apuesta la fracción óptima
+  // calculada con un mu supuesto, pero el mu verdadero resulta distinto — polaridad
+  // (crecimiento positivo vs. negativo), no solo magnitud, así que usa una escala
+  // divergente centrada en 0 en vez de una secuencial de un solo tono.
+  function renderMisestimateHeatmap(el, assumedMuRange, trueMuRange, grid, xLabel, yLabel, zLabel) {
+    const maxAbs = Math.max(...grid.flat().map((v) => Math.abs(v)), 1e-6);
+    const trace = {
+      z: grid,
+      x: assumedMuRange.map((m) => (m * 100).toFixed(1) + "%"),
+      y: trueMuRange.map((m) => (m * 100).toFixed(1) + "%"),
+      type: "heatmap",
+      zmin: -maxAbs,
+      zmax: maxAbs,
+      colorscale: [
+        [0, COLORS.accent3],
+        [0.5, "#141b2b"],
+        [1, COLORS.accent],
+      ],
+      hovertemplate: `${xLabel}: %{x}<br>${yLabel}: %{y}<br>${zLabel}: %{z:.2%}<extra></extra>`,
+      colorbar: { tickfont: { color: COLORS.text }, tickformat: ".0%", title: { text: zLabel, font: { color: COLORS.text } } },
+    };
+    const layout = baseLayout(null, {
+      dragmode: false,
+      hovermode: "closest",
+      xaxis: { title: xLabel, gridcolor: COLORS.grid },
+      yaxis: { title: yLabel, gridcolor: COLORS.grid },
+    });
+    Plotly.newPlot(el, [trace], layout, { ...CONFIG, scrollZoom: false });
+  }
+
+  return { COLORS, CONFIG, baseLayout, renderGrowthCurve, renderEquityCurves, renderTerminalHistogram, renderMisestimateHeatmap };
 })();

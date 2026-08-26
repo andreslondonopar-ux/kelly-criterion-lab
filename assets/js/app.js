@@ -22,12 +22,15 @@ const TRADING_DAYS = 252;
   const binaryGrowthChartEl = el("binary-growth-chart");
 
   const muEl = el("mu-value");
+  const muSeNoteEl = el("mu-se-note");
   const sigmaEl = el("sigma-value");
   const fStarContinuousEl = el("fstar-continuous");
   const leverageNoteEl = el("leverage-note");
   const continuousGrowthChartEl = el("continuous-growth-chart");
 
   const equityCurvesChartEl = el("equity-curves-chart");
+  const drawdownTilesEl = el("drawdown-tiles");
+  const misestimateHeatmapEl = el("misestimate-heatmap");
 
   const terminalHistogramEl = el("terminal-histogram");
   const medianStatEl = el("median-stat");
@@ -93,9 +96,11 @@ const TRADING_DAYS = 252;
 
   // --- Paso 3: activo real, continuo ---
 
-  function renderContinuousPanel(mu, sigma, r) {
+  function renderContinuousPanel(mu, sigma, r, years) {
     const fStar = Kelly.continuousKelly(mu, sigma, r);
     muEl.textContent = fmtPct(mu);
+    const se = Kelly.standardErrorMu(sigma, years);
+    muSeNoteEl.textContent = I18N.t("paso3.muSeNote", { se: fmtPct(se) });
     sigmaEl.textContent = fmtPct(sigma);
     fStarContinuousEl.textContent = fmtPct(fStar);
     leverageNoteEl.style.display = fStar > 1 ? "block" : "none";
@@ -126,6 +131,34 @@ const TRADING_DAYS = 252;
       values: Kelly.simulateEquityCurve(fr.f, muDaily, sigmaDaily, rDaily, days),
     }));
     Plots.renderEquityCurves(equityCurvesChartEl, daysArr, series, I18N.t("charts.daysAxis"), I18N.t("charts.equityAxis"));
+
+    // Distribución de máximo drawdown (no una sola trayectoria) para Kelly completo y
+    // medio Kelly — cuantifica el trade-off real de crecimiento-vs-drawdown detrás del
+    // texto de este paso, en vez de dejarlo solo como argumento visual de las curvas.
+    const ddFull = Kelly.simulateDrawdownDistribution(fStar, muDaily, sigmaDaily, rDaily, days, 1500);
+    const ddHalf = Kelly.simulateDrawdownDistribution(fStar * 0.5, muDaily, sigmaDaily, rDaily, days, 1500);
+    drawdownTilesEl.innerHTML = `
+      <div class="stat-tile"><div class="label">${I18N.t("paso4.ddHalfLabel")}</div><div class="value">${fmtPct(Kelly.median(ddHalf))}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("paso4.ddFullLabel")}</div><div class="value down">${fmtPct(Kelly.median(ddFull))}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("paso4.ddFullP95Label")}</div><div class="value down">${fmtPct(Kelly.percentile(ddFull, 0.95))}</div></div>
+    `;
+  }
+
+  // Heatmap: crecimiento real obtenido apostando f*(mu supuesto) cuando el mu verdadero
+  // resulta distinto — cuantifica el costo de un error de estimación, centrado en el mu
+  // estimado en vivo (rango ± ~2x su error estándar, donde de verdad puede caer el
+  // verdadero mu con esta cantidad de datos).
+  function renderMisestimateHeatmap(mu, sigma, r, years) {
+    const se = Kelly.standardErrorMu(sigma, years);
+    const spread = Math.max(se * 2, 0.02);
+    const lo = mu - spread, hi = mu + spread;
+    const n = 15;
+    const muRange = Array.from({ length: n }, (_, i) => lo + ((hi - lo) * i) / (n - 1));
+    const grid = muRange.map((trueMu) => muRange.map((assumedMu) => Kelly.growthGivenMisestimate(assumedMu, trueMu, sigma, r)));
+    Plots.renderMisestimateHeatmap(
+      misestimateHeatmapEl, muRange, muRange, grid,
+      I18N.t("charts.assumedMuAxis"), I18N.t("charts.trueMuAxis"), I18N.t("charts.realGrowthLabel")
+    );
   }
 
   // --- Paso 5: distribución de resultados finales ---
@@ -140,12 +173,13 @@ const TRADING_DAYS = 252;
 
   function renderFromState() {
     if (!state) return;
-    const { p, b, mu, sigma, r, fStarContinuous } = state;
+    const { p, b, mu, sigma, r, years, fStarContinuous } = state;
     const fStarBinary = renderBinaryPanel(p, b);
-    renderContinuousPanel(mu, sigma, r);
+    renderContinuousPanel(mu, sigma, r, years);
     const muDaily = mu / TRADING_DAYS, sigmaDaily = sigma / Math.sqrt(TRADING_DAYS), rDaily = r / TRADING_DAYS;
     renderEquityCurves(fStarContinuous, muDaily, sigmaDaily, rDaily);
     renderTerminalDistribution(fStarContinuous, muDaily, sigmaDaily, rDaily);
+    renderMisestimateHeatmap(mu, sigma, r, years);
   }
 
   async function runPipeline() {
@@ -169,7 +203,7 @@ const TRADING_DAYS = 252;
       const r = (parseFloat(riskfreeInput.value) || 4) / 100;
       const fStarContinuous = Kelly.continuousKelly(mu, sigma, r);
 
-      state = { p, b, mu, sigma, r, fStarContinuous };
+      state = { p, b, mu, sigma, r, years, fStarContinuous };
       renderFromState();
       setStatus(I18N.t("app.ready"));
     } catch (err) {

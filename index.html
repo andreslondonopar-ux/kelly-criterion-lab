@@ -131,13 +131,18 @@
     </p>
     <div class="formula-block" data-i18n="paso3.formula">$$ f^* = \frac{\mu - r}{\sigma^2} $$</div>
     <div class="stat-grid">
-      <div class="stat-tile"><div class="label" data-i18n="paso3.muLabel">Retorno esperado anual (μ)</div><div class="value" id="mu-value">—</div></div>
+      <div class="stat-tile"><div class="label" data-i18n="paso3.muLabel">Retorno esperado anual (μ)</div><div class="value" id="mu-value">—</div><div class="stat-subnote" id="mu-se-note"></div></div>
       <div class="stat-tile"><div class="label" data-i18n="paso3.sigmaLabel">Volatilidad anual (σ)</div><div class="value" id="sigma-value">—</div></div>
       <div class="stat-tile"><div class="label" data-i18n="paso3.fStarLabel">Fracción de Kelly (f*)</div><div class="value up" id="fstar-continuous">—</div></div>
     </div>
     <div class="callout" id="leverage-note" style="display:none" data-i18n="paso3.leverageNote">
       f* > 100% significa que Kelly recomienda apalancarse — pedir prestado para invertir más del capital propio en el activo. No es un error: así de fuerte puede ser una ventaja real.
     </div>
+    <p style="font-size:13px; color:var(--text-faint); margin-top:12px" data-i18n="paso3.seExplainer">
+      El número pequeño bajo μ es su error estándar — con pocos años de historia diaria,
+      el margen de error de estimar el retorno esperado suele ser <em>mayor</em> que el
+      propio μ. Esa incertidumbre es la raíz cuantitativa de todo el Paso 4.
+    </p>
     <div class="card" style="margin-top:16px"><div class="plot" id="continuous-growth-chart"></div></div>
   </div>
 </section>
@@ -153,6 +158,19 @@
       sobre-apuesta. Medio Kelly es el punto de partida típico entre traders reales.
     </p>
     <div class="card"><div class="plot tall" id="equity-curves-chart"></div></div>
+    <div id="drawdown-tiles" class="stat-grid" style="margin-top:16px"></div>
+
+    <h3 style="font-size:1.05rem; margin-top:28px" data-i18n="paso4.sensTitle">¿Qué tan caro es un error de estimación?</h3>
+    <p data-i18n="paso4.sensP">
+      La curva de crecimiento del Paso 3 asume que <code>μ</code> se conoce exactamente.
+      En la práctica se estima con error (ver la nota de error estándar arriba). Esta
+      grilla muestra el crecimiento <strong>real</strong> que se obtiene si se apuesta la
+      fracción calculada con un <code>μ</code> supuesto, pero el <code>μ</code> verdadero
+      resulta ser otro — verde es crecimiento real positivo, rojo es negativo. La diagonal
+      (supuesto = verdadero) es siempre el mejor caso; alejarse de ella, incluso apostando
+      "de forma óptima" para el supuesto equivocado, cuesta crecimiento real.
+    </p>
+    <div class="card"><div class="plot" id="misestimate-heatmap"></div></div>
   </div>
 </section>
 
@@ -178,6 +196,15 @@
       Este sitio es material educativo, no asesoría financiera. Kelly asume que μ y σ se
       conocen exactamente — en la práctica se estiman con error, y ese error casi
       siempre hace que el Kelly "verdadero" sea menor al calculado.
+    </div>
+    <div class="callout" style="margin-top:16px" data-i18n="limits.multiAsset">
+      Un paso más allá de lo que este sitio implementa (decisión explícita de alcance, no
+      una limitación técnica): con <strong>varios activos correlacionados</strong> a la
+      vez, el vector óptimo de Kelly es <code>f* = Σ⁻¹(μ − r·1)</code> — la misma matriz
+      de covarianza <code>Σ</code> que ya calcula
+      <a href="https://markowitz-portfolio-lab.vercel.app" target="_blank" rel="noopener">Markowitz Portfolio Lab</a>,
+      aplicada a maximizar crecimiento en vez de minimizar varianza para un retorno
+      objetivo.
     </div>
     <p style="margin-top:20px" data-i18n="limits.reading">
       Para profundizar: John L. Kelly Jr., <em>"A New Interpretation of Information
